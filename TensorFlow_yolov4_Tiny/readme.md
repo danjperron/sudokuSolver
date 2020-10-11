@@ -15,7 +15,7 @@ This is the method to use tensorflow with yolov4 Tiny to solve a sudoku sheet wi
 3- copy sudokuSolver.py and Statistic.py into TensorFlow-2.x-YOLOv3
 
 
-4- Download the weight from google drive
+4- Download the weight from google drive or create your own by inserting picture and xml into the sudoku folder
 
     https://drive.google.com/file/d/1ThDDBGfbFaNh1TF-NQqq2UuWlPON9YZO/view?usp=sharing
      
