@@ -10,7 +10,10 @@ This is the method to use tensorflow with yolov4 Tiny to solve a sudoku sheet wi
 2-  copy everything from ~/sudokuSolver/Tensorflow_tolov4_Tiny to TensorFlow-2.X-YOlOv3
     cp -y -r  ~/sudokuSolver/TensorFlow_yolov4_Tiny ~/TensorFlow-2.x-YOLOv3
     
-3- Download the weight from google drive
+3- copy sudokuSolver.py and Statistic.py into TensorFlow-2.x-YOLOv3
+
+
+4- Download the weight from google drive
 
     https://drive.google.com/file/d/1ThDDBGfbFaNh1TF-NQqq2UuWlPON9YZO/view?usp=sharing
      
@@ -19,7 +22,7 @@ This is the method to use tensorflow with yolov4 Tiny to solve a sudoku sheet wi
     cd ~/TensorFlow-2.x-YOLOv3/checkpoints
     tar -xzf yolo4Tiny.tgz 
 
-4- Connect a webcam into the Pi4 and run 
+5- Connect a webcam into the Pi4 and run 
     
     python3 detect_sudoku.py
     
