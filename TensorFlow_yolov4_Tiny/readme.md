@@ -1,6 +1,7 @@
 This is the method to use tensorflow with yolov4 Tiny to solve a sudoku sheet with a webcam.
 
 1- install Tensor flow yolo4
+    
     cd ~
     git clone https://github.com/pythonlessons/TensorFlow-2.x-YOLOv3
     
@@ -8,6 +9,7 @@ This is the method to use tensorflow with yolov4 Tiny to solve a sudoku sheet wi
     B.T.W. I'm using virtual env. Check some youtube to figure it out
     
 2-  copy everything from ~/sudokuSolver/Tensorflow_tolov4_Tiny to TensorFlow-2.X-YOlOv3
+    
     cp -y -r  ~/sudokuSolver/TensorFlow_yolov4_Tiny ~/TensorFlow-2.x-YOLOv3
     
 3- copy sudokuSolver.py and Statistic.py into TensorFlow-2.x-YOLOv3
