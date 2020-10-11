@@ -5,8 +5,11 @@ This is the method to use tensorflow with yolov4 Tiny to solve a sudoku sheet wi
     cd ~
     git clone https://github.com/pythonlessons/TensorFlow-2.x-YOLOv3
     
-    N.B.  a  youtube video to watch   https://www.youtube.com/watch?v=_4A9inxGqRM
+    N.B.  youtube videos to watch   
+    https://www.youtube.com/watch?v=_4A9inxGqRM
+    
     B.T.W. I'm using virtual env. Check some youtube to figure it out
+    https://www.youtube.com/watch?v=GNRg2P8Vqqs&t=85s
     
 2-  copy everything from ~/sudokuSolver/Tensorflow_tolov4_Tiny to TensorFlow-2.X-YOlOv3
     
