@@ -1,19 +1,24 @@
 This is the method to use tensorflow with yolov4 Tiny to solve a sudoku sheet with a webcam.
 
 1- install Tensor flow yolo4
+    
     cd ~
     git clone https://github.com/pythonlessons/TensorFlow-2.x-YOLOv3
     
-    N.B.  a  youtube video to watch   https://www.youtube.com/watch?v=_4A9inxGqRM
+    N.B.  youtube videos to watch   
+    https://www.youtube.com/watch?v=_4A9inxGqRM
+    
     B.T.W. I'm using virtual env. Check some youtube to figure it out
+    https://www.youtube.com/watch?v=GNRg2P8Vqqs&t=85s
     
 2-  copy everything from ~/sudokuSolver/Tensorflow_tolov4_Tiny to TensorFlow-2.X-YOlOv3
+    
     cp -y -r  ~/sudokuSolver/TensorFlow_yolov4_Tiny ~/TensorFlow-2.x-YOLOv3
     
 3- copy sudokuSolver.py and Statistic.py into TensorFlow-2.x-YOLOv3
 
 
-4- Download the weight from google drive
+4- Download the weight from google drive or create your own by inserting picture and xml into the sudoku folder
 
     https://drive.google.com/file/d/1ThDDBGfbFaNh1TF-NQqq2UuWlPON9YZO/view?usp=sharing
      
