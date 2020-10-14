@@ -36,6 +36,8 @@ import numpy as np
 import math
 
 
+
+
 def haughTransform(img):
     gray= cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray,50,150,apertureSize = 3)
@@ -90,6 +92,14 @@ def haughTransform(img):
     return targetAngle
 
 
+previousFrame = None
+
+tfFrame =  np.zeros((camHeight, camWidth, 3), np.uint8)
+tfFrame[::]=(255,255,255)
+
+rotatedFrame = copy.deepcopy(tfFrame)
+sudokuFrame= copy.deepcopy(tfFrame)
+
 # ---------   main start ------
 
 refID =[]
@@ -120,52 +130,69 @@ webcam.set(cv2.CAP_PROP_FRAME_WIDTH, camWidth)
 webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, camHeight)
 
 cv2.namedWindow("img",cv2.WINDOW_NORMAL)
-cv2.resizeWindow("img",camWidth*2,camHeight)
+cv2.resizeWindow("img",camWidth*3,camHeight)
 
 
-imS =  np.zeros((camHeight, camWidth, 3), np.uint8)
-imS[::]=(255,255,255)
 
 # --------  main loop -------
 
 webcamBuffer=5
+
+# --------  timing for motion detection
+start = time.time()
+previousFrame = None
+motion=False
+
 while True:
     #decrease lag by clearing 5 images buffer
+
     for i in range(webcamBuffer):
-        _, imI = webcam.read()
+        _, frame = webcam.read()
     #flip image
+    frame = cv2.flip(frame,-1)
 
-    imI = cv2.flip(imI,-1)
-    sudokuAngle = haughTransform(imI)
-    webcamBuffer = 2
+    # motion detection
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.GaussianBlur(gray, (21,21),0)
+    if previousFrame is None:
+        previousFrame = gray
+        continue
+    diff_frame = cv2.absdiff(previousFrame,gray)
+    previousFrame=gray
+    thresh_frame = cv2.threshold(diff_frame,30,255, cv2.THRESH_BINARY)[1]
+    thresh_frame = cv2.dilate(thresh_frame, None, iterations = 2)
+    cnts,_ = cv2.findContours(thresh_frame.copy(),cv2.RETR_EXTERNAL,
+                              cv2.CHAIN_APPROX_SIMPLE)
+    for contour in cnts:
+        if cv2.contourArea(contour) < 10:
+            continue
+        start=time.time()
+
+    frames = np.hstack(( frame,tfFrame,sudokuFrame))
+    cv2.imshow("img",frames)
+    key = cv2.waitKey(1)
+    if key == ord('q'):
+        break
+
+    # is the image steady?
+    # if not  skip the detection
+    if time.time()-start < 0.1:
+        webcamBuffer=1
+        continue
+    webcamBuffer=5
+
+    sudokuAngle = haughTransform(frame)
     if sudokuAngle is not None:
-        webcamBuffer=5
         #rotate image according to haug
-        image_center = tuple(np.array(imI.shape[1::-1]) / 2)
+        image_center = tuple(np.array(frame.shape[1::-1]) / 2)
         rot_mat = cv2.getRotationMatrix2D(image_center, -sudokuAngle * 180.0 / math.pi, 1.0)
-        result  = cv2.warpAffine(imI, rot_mat, imI.shape[1::-1],
+        rotatedFrame  = cv2.warpAffine(frame, rot_mat, frame.shape[1::-1],
                          flags=cv2.INTER_LINEAR)
-        imI = copy.deepcopy(result)
-        im =  copy.deepcopy(imI)
+        _tFrame=copy.deepcopy(rotatedFrame)
+        tfFrame, boxes = detect_img(yolo, _tFrame, "", input_size=YOLO_INPUT_SIZE, show=False, CLASSES=TRAIN_CLASSES, rectangle_colors=(255,0,0))
 
-        frame = np.hstack(( im,imS))
-        cv2.imshow("img",frame)
-        cv2.moveWindow("img",0,0)
-        key = cv2.waitKey(1)
-        if key == ord('q'):
-            break
-
-        imr, boxes = detect_img(yolo, im, "", input_size=YOLO_INPUT_SIZE, show=False, CLASSES=TRAIN_CLASSES, rectangle_colors=(255,0,0))
- #       print(boxes)
-        frame = np.hstack(( imr,imS))
-        cv2.imshow("img",frame)
-        key = cv2.waitKey(1)
-        if key == ord('q'):
-            break
-
-        imT= copy.deepcopy(imI)
         sudokuAngle=0
-        gridSorter = sudokuGridSorter(boxes,refID,imT,sudokuAngle)
+        gridSorter = sudokuGridSorter(boxes,refID,sudokuFrame,sudokuAngle)
         gridSorter.printGrid()
 
         if gridSorter.sortGrid():
@@ -174,28 +201,16 @@ while True:
             solver.fillGrid()
             if solver.isDone():
                 solver.printGrid()
-                gridSorter.show(imT,solver.grid)
-                imS=copy.deepcopy(imT)
-                frame = np.hstack(( imr,imS))
-                cv2.imshow("img",frame)
+                sudokuFrame= copy.deepcopy(rotatedFrame)
+                gridSorter.show(sudokuFrame,solver.grid)
                 print("Solve")
             else:
                 solver.printGrid()
                 print("no sort")
-        #        imS = copy.deepcopy(gridSorter.img)
-        #        frame = np.hstack(( imr,imS))
-        #        cv2.imshow("img",frame)
         else:
-            imS[::]=(255,255,255)
+            sudokuFrame[::]=(255,255,255)
     else:
-        imS[::]=(255,255,255)
-        frame = np.hstack(( imI,imS))
-        cv2.imshow("img",frame)
-
-    key = cv2.waitKey(1)
-    if key == ord('q'):
-        break
-
+        sudokuFrame[::]=(255,255,255)
 
 cv2.destroyAllWindows()
 quit()
