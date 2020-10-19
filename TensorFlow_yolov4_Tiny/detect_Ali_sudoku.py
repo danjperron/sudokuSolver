@@ -1,11 +1,10 @@
 #================================================================
 #
-#   File name   : detect_mnist.py
-#   Author      : PyLessons
-#   Created date: 2020-08-12
-#   Website     : https://pylessons.com/
-#   GitHub      : https://github.com/pythonlessons/TensorFlow-2.x-YOLOv3
-#   Description : mnist object detection example
+#   File name   : detect_Ali_sudoku.py
+#   Author      : danjperron
+#   Created date: 2020-10-18
+#   GitHub      : https://github.com/danjperron/sudokuSolver
+#   Description : Tensorflow soduku solver using Ali Assaf algorithm
 #
 #================================================================
 import os
@@ -22,10 +21,10 @@ from yolov3.utils import detect_img
 from yolov3.configs import *
 
 from sudokuGridSorter import sudokuGridSorter
-from sudokuSolver import sudokuSolver
+from  AliAssafSudoku import solve_sudoku
 from Statistic import Statistic
-solver = sudokuSolver()
 
+#solver = sudokuSolver()
 # ---------  camera size ----------
 camWidth=640
 camHeight=480
@@ -77,7 +76,6 @@ def haughTransform(img):
                 angle = math.atan2(-dx,-dy)
         angleTable.append(angle)
         statAngle.add(angle)
-#        print( dx, dy , angle * 180.0 / math.pi , A)
     # reject any angle higher than  5 degree  from target
     targetAngle=statAngle.mean()
     maxDegree = 5 * math.pi / 180
@@ -88,7 +86,6 @@ def haughTransform(img):
     if statAngle.count > 0:
         targetAngle = statAngle.mean()
 
-    print("Best angle :", 180.0 * targetAngle / math.pi)
     return targetAngle
 
 
@@ -193,20 +190,20 @@ while True:
 
         sudokuAngle=0
         gridSorter = sudokuGridSorter(boxes,refID,sudokuFrame,sudokuAngle)
-        gridSorter.printGrid()
 
         if gridSorter.sortGrid():
-            solver.grid = copy.deepcopy(gridSorter.grid)
-            solver.printGrid()
-            solver.fillGrid()
-            if solver.isDone():
-                solver.printGrid()
+            gridSolver=None
+            valid = True
+            try:
+                for grid_solution in solve_sudoku((3, 3),copy.deepcopy(gridSorter.grid)):
+                    gridSolver=grid_solution
+                    break   # only one solution needed
+            except KeyError:
+                valid=False
+
+            if valid:
                 sudokuFrame= copy.deepcopy(rotatedFrame)
-                gridSorter.show(sudokuFrame,solver.grid)
-                print("Solve")
-            else:
-                solver.printGrid()
-                print("no sort")
+                gridSorter.show(sudokuFrame,gridSolver)
         else:
             sudokuFrame[::]=(255,255,255)
     else:

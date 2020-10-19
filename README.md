@@ -11,3 +11,6 @@ Run and enter manually the grid using 0 for blank
 N.B. The TensorFlow_yolov4_Tiny  folder contains files and documentation 
      to enter the sudoku grid via a webcam.
 
+     Update. Inside the TensorFlow_yolov4_Tiny folder I added Ali Assaf sudoku solver.
+     demo video: https://youtu.be/cpIeI_0Ad7A
+

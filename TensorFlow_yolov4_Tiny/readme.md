@@ -1,5 +1,8 @@
 This is the method to use tensorflow with yolov4 Tiny to solve a sudoku sheet with a webcam.
 
+** update 18 October 2020, I added Ali Assaf algorithm to solve the sudoku.
+   it is base on Algorithm X  invented by Donald Knuth. 
+
 1- install Tensor flow yolo4
     
     cd ~
