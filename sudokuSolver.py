@@ -1,10 +1,64 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+This module solves a sudoku grid that is kept in the sudokuSolution.grid attribute
+using a recursive dive into possible solutions based on analysis of possible
+numbers in specific positions. A series of self-tests are performed if the module
+is called directly such as with:
+
+Example:
+        $ python sudokuSolver.py
+
+Typical use is through an import within a module that would capture sudoku grid(s)
+and use sudokuSolver to resolve. Example follows:
+
+        from sudokuSolver import sudokoSolver \
+                                 SudokuDeepLevelError, SudokuTimeLimitError
+        sudoku=sudokuSolver(deeplevel=10, maxtime=4) #see below for arguments
+        # fill sudoku.grid with information
+        sudoku.grid = my_grid()  #assuming "my_grid()" is a user function returning a grid
+                                 #Attribute section below describes grid structure
+        sudoku.solveGrid()       #will solve the grid in sudoku.grid
+        # sudoky.solveGrid(other_grid)  # alternate useage will solve a grid passed as argument
+                                        # Attribute section below shows grid structure
+
+
+    Args:
+    deeplevel(int): optional - deepest recursion level used to solve sudoku grid
+                    default = 5
+                    sudokuSolver raises SudokuDeepLevelError exception if exceeded
+    maxtime(float): optional - maximum time in seconds allowed to solve sudoku grid
+                    default = 15
+                    sudokuSolver raises SudokuTimeLimitError exception if exceeded
+
+    Attributes:
+    grid          - list of numbers for sudoku grid arranged as:
+                    [[row 1],[row 2], ... [row 9]] where each row is a list of nine digits
+                    with zeroes ("0") used to mark empty sudoku grid places.
+                    ex: a row like "8 _ 1 _ _ 3 _ _ 1" would be the list : [8,0,1,0,0,3,0,0,1]
+
+    Methods:
+    isValid()     - validates internal attribute "grid". Returns True/False accordingly
+    printGrid()   - prints internal attribute "grid" by default.
+                    If provided a user grid-like argument, will print that user grid. In that
+                    case the user passed grid must be a list structured like the "grid" attribute.
+    solveGrid()   - initiates the sudoku grid solving process. By default uses the internal
+                    attribute "grid".  Will solve user provided grid if one is passed as argument.
+                    In that case, user passed grid must be a list structured like "grid" attribute.
+                    Raises SudokuDeepLevelError or SudokuTimeLimitError if internal limits exceeded.
+
+    Exceptions:
+    SudokuDeepLevelError   - exception raised if solving process uses recursion than specified.
+                             see Args section above
+    SudokuTimeLimitError   - exception raised if solving process uses more time than allocated.
+                             see Args section above
+
 Created on Tue Aug 18 21:05:13 2020
 @author: daniel
 Class to solve sudoku grid
-   
+
+
+
 """
 # Copyright © 2020, Daniel Perron
 # Permission is hereby granted, free of charge, to any person
@@ -36,23 +90,23 @@ class SudokuDeepLevelError(Exception):
     """Exception when SudokuSolver exceeds DEEPLEVELMAX number of recursions"""
     def __init__(self, deeplevel):
         Exception.__init__(self)
-        self.messageDLE = "SudokuSolver - requires more than {} levels".format(deeplevel)
+        self.msg_dle = "SudokuSolver - requires more than {} levels".format(deeplevel)
     def __str__(self):
-        return repr(self.messageDLE)
+        return repr(self.msg_dle)
 
 class SudokuTimeLimitError(Exception):
     """Exception when SudokuSolver exceeds MAXTIME for solving puzzle"""
     def __init__(self, maxtime):
         Exception.__init__(self)
-        self.messageTLE = "SudokuSolver - requires more than {} second(s) to complete".format(maxtime)
+        self.msg_tle = "SudokuSolver - requires more than {} second(s) to complete".format(maxtime)
     def __str__(self):
-        return repr(self.messageTLE)
+        return repr(self.msg_tle)
 
 class sudokuSolver:
 
     DEEPLEVELMAX = 5  #maximum level of recursive analysis
-    MAXTIME = 5       #maximum time (in seconds) allowed
-    
+    MAXTIME = 15       #maximum time (in seconds) allowed
+
     def __init__(self, grid=None,deepLevelMax=DEEPLEVELMAX, maxTime=MAXTIME):
         if grid is None:
             self.grid = [x[:] for x in [[0] * 9]*9]
@@ -81,8 +135,15 @@ class sudokuSolver:
             print("|")
         print("+-----------+-----------+-----------+")
 
+    def solveGrid(self, grid=None):
+        if grid is not None:
+            self.grid = copy.deepcopy(grid)
+        if self.isValid():
+            self._fillGrid()
+        else:
+            print("sudokuSolver - ERROR: supplied grid is invalid")
 
-    def validateRow(self, row_i):
+    def _validateRow(self, row_i):
         Valid = []
         for col_i in range(9):
             Number = self.grid[row_i][col_i]
@@ -96,7 +157,7 @@ class sudokuSolver:
                 return False, row_i, col_i
         return True, None, None
 
-    def validateCol(self, col_i):
+    def _validateCol(self, col_i):
         Valid = []
         for row_i in range(9):
             Number = self.grid[row_i][col_i]
@@ -110,7 +171,7 @@ class sudokuSolver:
                 return False, row_i, col_i
         return True, None, None
 
-    def validateBox(self, box_i):
+    def _validateBox(self, box_i):
         row_base = (box_i//3) * 3
         col_base = (box_i % 3) * 3
         Valid = []
@@ -127,7 +188,7 @@ class sudokuSolver:
                     return False, row_base+row_i, col_base+col_i
         return True, None, None
 
-    def validateGrid(self):
+    def _validateGrid(self):
         # Get number of Empty digits
         nbDigits = 0
         for row_i in range(9):
@@ -137,22 +198,22 @@ class sudokuSolver:
             return False, 10, 10
 
         for i in range(9):
-            valid, row, col = self.validateRow(i)
+            valid, row, col = self._validateRow(i)
             if not valid:
                 return False, row, col
-            valid, row, col = self.validateCol(i)
+            valid, row, col = self._validateCol(i)
             if not valid:
                 return False, row, col
-            valid, row, col = self.validateBox(i)
+            valid, row, col = self._validateBox(i)
             if not valid:
                 return False, row, col
         return True, None, None
 
     def isValid(self):
-        valid, _, _  = self.validateGrid()
+        valid, _, _  = self._validateGrid()
         return valid
 
-    def getRowPossibility(self, row_i):
+    def _getRowPossibility(self, row_i):
         allPossibility = self.allNumbers[:]
         for Number in self.grid[row_i]:
             if Number :
@@ -162,7 +223,7 @@ class sudokuSolver:
                     pass
         return allPossibility
 
-    def getColPossibility(self, col_i):
+    def _getColPossibility(self, col_i):
         allPossibility = self.allNumbers[:]
         for row_i in range(9):
             Number = self.grid[row_i][col_i]
@@ -173,7 +234,7 @@ class sudokuSolver:
                     pass
         return allPossibility
 
-    def getBoxPossibility(self, box_i):
+    def _getBoxPossibility(self, box_i):
         allPossibility = self.allNumbers[:]
         row_base = (box_i//3) * 3
         col_base = (box_i % 3) * 3
@@ -181,67 +242,68 @@ class sudokuSolver:
         for row_i in range(3):
             for col_i in range(3):
                 Number = self.grid[row_base + row_i][col_base + col_i]
-                if Number:  
+                if Number:
                     try:
                         allPossibility.remove(Number)
                     except ValueError:
                         pass
         return allPossibility
 
-    def getCellPossibility(self, row_i, col_i, rowP=None,
+    def _getCellPossibility(self, row_i, col_i, rowP=None,
                            colP=None, boxP=None):
 
-        if self.grid[row_i][col_i] : 
+        def intersection(list1, list2):
+            list3 = [value for value in list1 if value in list2]
+            return list3
+        
+        if self.grid[row_i][col_i] :
             return []
         box_i = (row_i // 3) * 3 + (col_i // 3)
 
         if rowP is None:
-            rowP = self.getRowPossibility(row_i)[:]
+            rowP = self._getRowPossibility(row_i)[:]
         if colP is None:
-            colP = self.getColPossibility(col_i)[:]
+            colP = self._getColPossibility(col_i)[:]
         if boxP is None:
-            boxP = self.getBoxPossibility(box_i)[:]
+            boxP = self._getBoxPossibility(box_i)[:]
         possibility = boxP[:]
-        possibility = self.intersection(possibility[:], rowP)[:]
-        possibility = self.intersection(possibility[:], colP)[:]
+        possibility = intersection(possibility[:], rowP)[:]
+        possibility = intersection(possibility[:], colP)[:]
         return possibility
 
-    def intersection(self, list1, list2):
-        list3 = [value for value in list1 if value in list2]
-        return list3
 
-    def fillGrid(self, deepLevel=0):
+    def _fillGrid(self, deepLevel=0):
         if deepLevel == 0:
             self.startTime = time.time()
         while True:
-            Number, row_i, col_i = self.getNextNumber()
+            Number, row_i, col_i = self._getNextNumber()
             if Number is None:
                 if row_i is not None:
                     return
                 if deepLevel > self.deepLevelMax:
                     raise SudokuDeepLevelError(self.deepLevelMax)
                 self.deepestLevel=max(self.deepestLevel, deepLevel+1)
-                self.huntForIt(deepLevel+1)
+                self._huntForIt(deepLevel+1)
                 break
             else:
                 self.grid[row_i][col_i] = Number
 #       self.printGrid()
 
-    def getNextNumberByPossibility(self):
+    def _getNextNumberByPossibility(self):
         cols_possibility = 9*[None]
         boxs_possibility = 9*[None]
 
         for row_i in range(9):
-            row_possibility = self.getRowPossibility(row_i)
+            row_possibility = self._getRowPossibility(row_i)
             if len(row_possibility) == 0:
                 continue
             for col_i in range(9):
                 if cols_possibility[col_i] is None:
-                    cols_possibility[col_i] = self.getColPossibility(col_i)
+                    cols_possibility[col_i] = self._getColPossibility(col_i)
                 box_i = (row_i // 3) * 3 + (col_i // 3)
                 if boxs_possibility[box_i] is None:
-                    boxs_possibility[box_i] = self.getBoxPossibility(box_i)
-                possibility = self.getCellPossibility(row_i, col_i,
+                    boxs_possibility[box_i] = self._getBoxPossibility(box_i)
+                possibility = self._getCellPossibility(row_i, col_i,
                                                       row_possibility,
                                                       cols_possibility[col_i],
                                                       boxs_possibility[box_i])
@@ -252,11 +314,11 @@ class sudokuSolver:
                         return None, row_i, col_i
         return None, None, None
 
-    def getBoxUniquePosition(self, box_i):
+    def _getBoxUniquePosition(self, box_i):
         row_base = (box_i//3) * 3
         col_base = (box_i % 3) * 3
 
-        boxPossibility = self.getBoxPossibility(box_i)
+        boxPossibility = self._getBoxPossibility(box_i)
 
         for Number in boxPossibility:
             count = 0
@@ -264,7 +326,7 @@ class sudokuSolver:
             col_found = None
             for row_i in range(3):
                 for col_i in range(3):
-                    cellPossibility = self.getCellPossibility(row_base+row_i,
+                    cellPossibility = self._getCellPossibility(row_base+row_i,
                                                               col_base+col_i)
                     try:
                         cellPossibility.index(Number)
@@ -278,14 +340,14 @@ class sudokuSolver:
                 return Number, row_found, col_found
         return None, None, None
 
-    def getRowUniquePosition(self, row_i):
-        rowPossibility = self.getRowPossibility(row_i)
+    def _getRowUniquePosition(self, row_i):
+        rowPossibility = self._getRowPossibility(row_i)
 
         for Number in rowPossibility:
             count = 0
             col_found = None
             for col_i in range(9):
-                cellPossibility = self.getCellPossibility(row_i, col_i)
+                cellPossibility = self._getCellPossibility(row_i, col_i)
                 try:
                     cellPossibility.index(Number)
                 except ValueError:
@@ -297,14 +359,14 @@ class sudokuSolver:
                 return Number, row_i, col_found
         return None, None, None
 
-    def getColUniquePosition(self, col_i):
-        colPossibility = self.getColPossibility(col_i)
+    def _getColUniquePosition(self, col_i):
+        colPossibility = self._getColPossibility(col_i)
 
         for Number in colPossibility:
             count = 0
             row_found = None
             for row_i in range(9):
-                cellPossibility = self.getCellPossibility(row_i, col_i)
+                cellPossibility = self._getCellPossibility(row_i, col_i)
                 try:
                     cellPossibility.index(Number)
                 except ValueError:
@@ -316,21 +378,20 @@ class sudokuSolver:
                 return Number, row_found, col_i
         return None, None, None
 
-    def getNextNumberByUniquePosition(self):
+    def _getNextNumberByUniquePosition(self):
         for box_index in range(9):
-            Number, row_i, col_i = self.getBoxUniquePosition(box_index)
+            Number, row_i, col_i = self._getBoxUniquePosition(box_index)
             if Number is not None:
                 return Number, row_i, col_i
         for row_index in range(9):
-            Number, row_i, col_i = self.getRowUniquePosition(row_index)
+            Number, row_i, col_i = self._getRowUniquePosition(row_index)
             if Number is not None:
                 return Number, row_i, col_i
         for col_index in range(9):
-            Number, row_i, col_i = self.getColUniquePosition(col_index)
+            Number, row_i, col_i = self._getColUniquePosition(col_index)
             if Number is not None:
                 return Number, row_i, col_i
         return None, None, None
-
 
 
     def isDone(self):
@@ -340,46 +401,46 @@ class sudokuSolver:
             return False
         return True
 
-    def huntForIt(self, deepLevel=0):
+    def _huntForIt(self, deepLevel=0):
         originalGrid = self.grid
         for row_i in range(9):
             for col_i in range(9):
                 if self.grid[row_i][col_i]:
                     continue
-                cellPossibility = self.getCellPossibility(row_i, col_i)
+                cellPossibility = self._getCellPossibility(row_i, col_i)
                 for guessNumber in cellPossibility:
                     #  copy original grid
                     self.grid = copy.deepcopy(originalGrid)
                     self.grid[row_i][col_i] = guessNumber
-                    self.fillGrid(deepLevel)
+                    self._fillGrid(deepLevel)
                     if self.isDone():
                         return True
                     if (time.time() - self.startTime) > self.maxTime:
                         raise SudokuTimeLimitError(self.maxTime)
         return False
 
-    def getNextNumber(self):
-        valid, row_i, col_i = self.validateGrid()
+    def _getNextNumber(self):
+        valid, row_i, col_i = self._validateGrid()
         if not valid:
             return None, row_i, col_i
-        Number, row_i, col_i = self.getNextNumberByPossibility()
+        Number, row_i, col_i = self._getNextNumberByPossibility()
         if Number is None:
-            return self.getNextNumberByUniquePosition()
+            return self._getNextNumberByUniquePosition()
         return Number, row_i, col_i
 
-    def getAllCellsPossibility(self):
+    def _getAllCellsPossibility(self):
         allPossibility = []
         cols_possibility = 9*[None]
         boxs_possibility = 9*[None]
         for row_i in range(9):
-            row_possibility = self.getRowPossibility(row_i)
+            row_possibility = self._getRowPossibility(row_i)
             for col_i in range(9):
                 if cols_possibility[col_i] is None:
-                    cols_possibility[col_i] = self.getColPossibility(col_i)
+                    cols_possibility[col_i] = self._getColPossibility(col_i)
                 box_i = (row_i // 3) * 3 + col_i % 3
                 if boxs_possibility[box_i] is None:
-                    boxs_possibility[box_i] = self.getBoxPossibility(box_i)
-                possibility = self.getCellPossibility(row_i, col_i,
+                    boxs_possibility[box_i] = self._getBoxPossibility(box_i)
+                possibility = self._getCellPossibility(row_i, col_i,
                                                       row_possibility,
                                                       cols_possibility[col_i],
                                                       boxs_possibility[box_i])
@@ -389,21 +450,21 @@ class sudokuSolver:
         return allPossibility
 
     def printPossibility(self):
-        valid, row_i, col_i = self.validateGrid()
+        valid, row_i, col_i = self._validateGrid()
         if not valid:
             print("Grid Invalid Row:{}  Col:{}".format(row_i, col_i))
             return None, row_i, col_i
         cols_possibility = 9*[None]
         boxs_possibility = 9*[None]
         for row_i in range(9):
-            row_possibility = self.getRowPossibility(row_i)
+            row_possibility = self._getRowPossibility(row_i)
             for col_i in range(9):
                 if cols_possibility[col_i] is None:
-                    cols_possibility[col_i] = self.getColPossibility(col_i)
+                    cols_possibility[col_i] = self._getColPossibility(col_i)
                 box_i = (row_i // 3) * 3 + col_i % 3
                 if boxs_possibility[box_i] is None:
-                    boxs_possibility[box_i] = self.getBoxPossibility(box_i)
-                possibility = self.getCellPossibility(row_i, col_i,
+                    boxs_possibility[box_i] = self._getBoxPossibility(box_i)
+                possibility = self._getCellPossibility(row_i, col_i,
                                                       row_possibility,
                                                       cols_possibility[col_i],
                                                       boxs_possibility[box_i])
@@ -416,7 +477,7 @@ class sudokuSolver:
 if __name__ == "__main__":
 ##HARDEST
     import sys
-    
+
     hard_sudoku = [
     [8,0,0,0,0,0,0,0,0],
     [0,0,3,6,0,0,0,0,0],
@@ -451,7 +512,7 @@ if __name__ == "__main__":
     else:
         print("FAILED")
 #
-#---Test invalid Grid 
+#---Test invalid Grid
 #
     print("sudokuSolver - testing INvalid sudoku grid : ", end="")
     sudoku.grid[1][1]=8
@@ -461,7 +522,7 @@ if __name__ == "__main__":
         print("FAILED")
 
 #
-#---Test too little time allowed (raise SudokuTimeLimitError) 
+#---Test too little time allowed (raise SudokuTimeLimitError)
 #
     print("sudokuSolver - testing with hard sudoku grid that requires time, using 0.01 seconds ")
     print("               expecting 'SudokuTimeLimitError' raised : ",end="")
@@ -469,17 +530,17 @@ if __name__ == "__main__":
     sudoku = sudokuSolver(deepLevelMax=15,maxTime=0.01)
     sudoku.grid=target_sudoku
     try:
-        sudoku.fillGrid()
-    except Exception as Erreur: 
-        if hasattr(Erreur, "messageTLE"):
+        sudoku.solveGrid()
+    except Exception as erreur:
+        if hasattr(erreur, "msg_tle"):
             print("PASSED")
         else:
             print("FAILED")
-            print("sudokuSolver - Unexpected error :",str(Erreur))
+            print("sudokuSolver - Unexpected error :",str(erreur))
             print("sudokuSolver - exiting")
             sys.exit()
 #
-#---Test not enough recursive levels (raise SudokuDeepLevelError) 
+#---Test not enough recursive levels (raise SudokuDeepLevelError)
 #
     print("sudokuSolver - testing with hard sudoku grid that requires 14 levels, using 5 ")
     print("               expecting 'SudokuDeepLevelError' raised : ",end="")
@@ -487,17 +548,17 @@ if __name__ == "__main__":
     sudoku = sudokuSolver(deepLevelMax=5,maxTime=999)
     sudoku.grid=target_sudoku
     try:
-        sudoku.fillGrid()
-    except Exception as Erreur: 
-        if hasattr(Erreur, "messageDLE"):
+        sudoku.solveGrid()
+    except Exception as erreur:
+        if hasattr(erreur, "msg_dle"):
             print("PASSED")
         else:
             print("FAILED")
-            print("sudokuSolver - Unexpected error :",str(Erreur))
+            print("sudokuSolver - Unexpected error :",str(erreur))
             print("sudokuSolver - exiting")
             sys.exit()
 #
-#---Test solution and provided by algorythm 
+#---Test solution and provided by algorythm
 #
     print("sudokuSolver - testing solutioning a hard sudoku grid")
     print("               expecting successful internal checks : ",end="")
@@ -505,8 +566,8 @@ if __name__ == "__main__":
     sudoku = sudokuSolver(deepLevelMax=15,maxTime=999)
     sudoku.grid=target_sudoku
     try:
-        sudoku.fillGrid()
-        timespent= time.time() - sudoku.startTime 
+        sudoku.solveGrid()
+        timespent= time.time() - sudoku.startTime
         if sudoku.isValid():
             if sudoku.isDone():
                 print("PASSED")
@@ -518,20 +579,20 @@ if __name__ == "__main__":
             print("FAILED")
             print("sudokuSolver - Unexpected error : <is.Valid> returned False")
             sys.exit()
-    except Exception as Erreur:
+    except Exception as erreur:
         print("FAILED")
-        print("sudokuSolver - Unexpected error :",str(Erreur))
+        print("sudokuSolver - Unexpected error :",str(erreur))
         print("sudokuSolver - exiting")
         sys.exit()
 #
-#---compare solution of algorythm against known result 
+#---compare solution of algorythm against known result
 #
     print("sudokuSolver - comparing solution to expected result : ",end="")
     if sudoku.grid == hard_sudoku_solution :
         print("PASSED")
         print()
         print("Solved Sudoku (used %3d levels) in %6.2f seconds" %
-             (sudoku.deepestLevel, timespent)) 
+             (sudoku.deepestLevel, timespent))
     else:
         print("FAILED")
         print("sudokuSolver - Unexpected resulting solution")
@@ -558,4 +619,3 @@ if __name__ == "__main__":
 #
     print("sudokuSolver - Testing completed, exiting")
     sys.exit()
- 

@@ -145,9 +145,15 @@ if sys.platform != "win32":
 #--- Windows ALMOST equivalent grid input routines
 #
 else:
-    def kbhit():
-        time.sleep(0.1)
-        return True
+               
+    def getkey():
+        key= input()
+        if '\x1b' in key:
+            print()
+            print("Exiting")
+            sys.stdout.flush()
+            sys.exit()
+        return key
 
     def get_a_line(row_index):
         ligne_ok = False
@@ -157,15 +163,7 @@ else:
             if len([x for x in a_line if x in string.digits]) != 9 : continue
             break
         return a_line
-               
-    def getkey():
-        key= input()
-        if '\x1b' in key:
-            print()
-            print("Exiting")
-            sys.stdout.flush()
-            sys.exit()
-        return key 
+
 
     def InputGrid(mysudoku):
         print("Windows Version")
@@ -208,7 +206,7 @@ sudoku = sudokuSolver(deepLevelMax=15,maxTime=50)
 if EnterGrid(sudoku):
     sudoku.printGrid()
     try:
-        sudoku.fillGrid()
+        sudoku.solveGrid()
         if sudoku.isValid():
             if sudoku.isDone():
                 print("Solved Sudoku (used %3d levels) in %6.2f seconds" %
